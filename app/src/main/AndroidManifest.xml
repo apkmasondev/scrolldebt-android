@@ -45,6 +45,26 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/doom_clock_widget_info" />
         </receiver>
+        <!--
+            ScrollDebtApp implements Configuration.Provider to supply the HiltWorkerFactory,
+            which is WorkManager's "on-demand initialisation" mode. That mode requires the
+            default androidx.startup initialiser to be removed: left in place, WorkManager is
+            initialised eagerly with the *default* configuration, without the Hilt factory, and
+            then cannot construct DailySyncWorker or ThresholdWorker - both @HiltWorker with
+            @AssistedInject constructors. The result was that Battery Saver notifications and
+            the periodic database sync silently never ran.
+        -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
