@@ -36,10 +36,17 @@ object ShareUtils {
             type = "image/png"
             putExtra(Intent.EXTRA_STREAM, imageUri)
             putExtra(Intent.EXTRA_TEXT, context.getString(R.string.share_intent_text))
+            // ClipData is what the system share sheet reads to render its preview
+            // thumbnail. With only EXTRA_STREAM set, the sheet cannot resolve the URI.
+            clipData = android.content.ClipData.newUri(context.contentResolver, "ScrollDebt", imageUri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
 
         val chooser = Intent.createChooser(shareIntent, context.getString(R.string.share_chooser_title))
+        // The grant on the inner intent covers the app the user finally picks, but not the
+        // chooser process itself - so the sheet's own preview load failed with a
+        // SecurityException and the thumbnail silently never appeared.
+        chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         try {
             context.startActivity(chooser)
         } catch (e: android.content.ActivityNotFoundException) {
