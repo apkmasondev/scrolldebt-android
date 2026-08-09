@@ -6,17 +6,23 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.scrolldebt.data.models.UsageRecord
 
+/**
+ * All methods are `suspend` so Room enforces off-main-thread access at compile time.
+ * They were previously blocking and merely called from Dispatchers.IO by convention -
+ * one careless call site away from a main-thread database access.
+ */
 @Dao
 interface UsageDao {
+
     @Query("SELECT * FROM usage_records ORDER BY date DESC")
-    fun getAllRecordsSync(): List<UsageRecord>
+    suspend fun getAllRecords(): List<UsageRecord>
 
     @Query("SELECT * FROM usage_records WHERE date = :date LIMIT 1")
-    fun getRecordForDate(date: String): UsageRecord?
+    suspend fun getRecordForDate(date: String): UsageRecord?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertOrUpdateRecord(record: UsageRecord)
+    suspend fun insertOrUpdateRecord(record: UsageRecord)
 
     @Query("SELECT SUM(totalTimeMs) FROM usage_records")
-    fun getTotalWastedTimeMsSync(): Long?
+    suspend fun getTotalWastedTimeMs(): Long?
 }

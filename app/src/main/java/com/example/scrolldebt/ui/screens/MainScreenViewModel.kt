@@ -82,7 +82,7 @@ class MainScreenViewModel @Inject constructor(
         }
     }
 
-    private fun checkPermissionAndRefreshSync() {
+    private suspend fun checkPermissionAndRefreshSync() {
         val hasPerm = usageStatsHelper.hasUsageStatsPermission()
         _state.update { it.copy(hasPermission = hasPerm) }
         if (hasPerm) {
@@ -107,7 +107,7 @@ class MainScreenViewModel @Inject constructor(
 
     fun loadHistoricalRecords() {
         viewModelScope.launch(Dispatchers.IO) {
-            val records = db.usageDao().getAllRecordsSync()
+            val records = db.usageDao().getAllRecords()
             _state.update { it.copy(historicalRecords = records) }
             recalculateStreakAndWeekly(_state.value.todayTotalTimeMs, records, _state.value.streakThresholdMinutes)
         }
@@ -123,7 +123,7 @@ class MainScreenViewModel @Inject constructor(
         }
     }
 
-    private fun refreshUsageStatsSync() {
+    private suspend fun refreshUsageStatsSync() {
         val hasPerm = usageStatsHelper.hasUsageStatsPermission()
         if (!hasPerm) {
             _state.update { it.copy(hasPermission = false) }
@@ -152,7 +152,7 @@ class MainScreenViewModel @Inject constructor(
         }
         recalculateStreakAndWeekly(totalMs, _state.value.historicalRecords, _state.value.streakThresholdMinutes)
         
-        val records = db.usageDao().getAllRecordsSync()
+        val records = db.usageDao().getAllRecords()
         _state.update { it.copy(historicalRecords = records) }
     }
 
