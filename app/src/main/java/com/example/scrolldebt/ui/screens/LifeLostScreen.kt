@@ -31,7 +31,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.example.scrolldebt.data.models.UsageRecord
-import com.example.scrolldebt.utils.Localization
 
 @Composable
 fun LifeLostScreen(
@@ -139,7 +138,7 @@ fun LifeLostScreen(
                 Text(
                     text = run {
                         val totalMin = (totalTimeMs / 1000 / 60)
-                        TimeFormatUtils.formatSmartTime(context, totalMin, language)
+                        TimeFormatUtils.formatSmartTime(context, totalMin)
                     },
                     color = MaterialTheme.colorScheme.onBackground,
                     fontSize = 36.sp,
@@ -150,7 +149,7 @@ fun LifeLostScreen(
                 Text(
                     text = run {
                         val weekMin = (weekTotalMs / 1000 / 60)
-                        val formattedTime = TimeFormatUtils.formatSmartTime(context, weekMin, language)
+                        val formattedTime = TimeFormatUtils.formatSmartTime(context, weekMin)
                         val prefix = when (language.lowercase()) {
                             "en" -> "This week:"
                             "es" -> "Esta semana:"

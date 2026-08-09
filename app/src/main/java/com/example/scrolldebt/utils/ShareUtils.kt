@@ -127,7 +127,7 @@ object ShareUtils {
         paint.letterSpacing = 0f // reset
 
         // Time Text
-        val timeStr = TimeFormatUtils.formatSmartTime(context, totalMinutes, language)
+        val timeStr = TimeFormatUtils.formatSmartTime(context, totalMinutes)
         paint.color = Color.parseColor("#F4F4F5")
         paint.textSize = 160f
         canvas.drawText(timeStr, width / 2f, 850f, paint)

@@ -40,7 +40,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.MaterialTheme
-import com.example.scrolldebt.utils.Localization
 import com.example.scrolldebt.utils.AppConstants
 import com.example.scrolldebt.ui.components.DoomscrollCard
 
@@ -62,7 +61,6 @@ fun SettingsScreen(
     onTrackingModeChange: (com.example.scrolldebt.data.repository.TrackingMode) -> Unit,
     themeMode: Int,
     onThemeModeChange: (Int) -> Unit,
-    language: String,
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()

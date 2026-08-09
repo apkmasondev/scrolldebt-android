@@ -1,6 +1,7 @@
 package com.example.scrolldebt.domain.usecases
 
 import com.example.scrolldebt.utils.AppUsageInfo
+import com.example.scrolldebt.utils.LocaleUtils
 import com.example.scrolldebt.utils.TimeFormatUtils
 import android.content.Context
 
@@ -587,7 +588,12 @@ class BrutalTruthEngine(private val context: Context) {
 
     fun getWeeklyRoast(weekHours: Double, language: String): String {
         val totalMinutes = (weekHours * 60).toLong()
-        val formattedTime = TimeFormatUtils.formatSmartTime(context, totalMinutes, language)
+        // The engine holds the application context, which tracks the *system* locale.
+        // Format the duration against the in-app language so "2h 15m" matches the roast around it.
+        val formattedTime = TimeFormatUtils.formatSmartTime(
+            LocaleUtils.withAppLocale(context, language),
+            totalMinutes
+        )
         val lang = language.lowercase()
 
         val plLevel1 = listOf(

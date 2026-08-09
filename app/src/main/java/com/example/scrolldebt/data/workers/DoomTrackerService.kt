@@ -14,7 +14,6 @@ import com.example.scrolldebt.MainActivity
 import com.example.scrolldebt.data.repository.PreferencesManager
 import com.example.scrolldebt.domain.usecases.BrutalTruthEngine
 import com.example.scrolldebt.utils.AppUsageInfo
-import com.example.scrolldebt.utils.Localization
 import com.example.scrolldebt.utils.UsageStatsHelper
 import kotlinx.coroutines.*
 import java.text.SimpleDateFormat

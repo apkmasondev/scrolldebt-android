@@ -15,7 +15,6 @@ import androidx.work.WorkerParameters
 import com.example.scrolldebt.MainActivity
 import com.example.scrolldebt.R
 import com.example.scrolldebt.domain.usecases.BrutalTruthEngine
-import com.example.scrolldebt.utils.Localization
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale

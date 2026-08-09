@@ -11,7 +11,6 @@ import com.example.scrolldebt.utils.UsageStatsHelper
 import com.example.scrolldebt.data.db.ScrollDebtDatabase
 import com.example.scrolldebt.data.models.UsageRecord
 import com.example.scrolldebt.domain.usecases.BrutalTruthEngine
-import com.example.scrolldebt.utils.Localization
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

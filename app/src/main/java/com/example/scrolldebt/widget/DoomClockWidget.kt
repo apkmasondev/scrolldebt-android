@@ -23,13 +23,13 @@ import androidx.glance.unit.ColorProvider
 import com.example.scrolldebt.MainActivity
 import com.example.scrolldebt.R
 import com.example.scrolldebt.data.repository.PreferencesManager
-import com.example.scrolldebt.utils.Localization
+import com.example.scrolldebt.utils.LocaleUtils
 import com.example.scrolldebt.utils.UsageStatsHelper
 
 class DoomClockWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val prefs = PreferencesManager(context)
+        val language = PreferencesManager(context).getLanguage()
 
         val totalTimeMs = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             val helper = UsageStatsHelper(context)
@@ -43,15 +43,19 @@ class DoomClockWidget : GlanceAppWidget() {
 
         val totalHours = totalTimeMs / 1000.0 / 60.0 / 60.0
         val timeString = String.format(java.util.Locale.US, "%.1f", totalHours)
-        val language = prefs.getLanguage()
+
+        // The widget runs off the application context, which follows the *system* locale.
+        // Resolve the footer against the in-app language so it matches the rest of the app.
+        val footerText = LocaleUtils.withAppLocale(context, language)
+            .getString(R.string.widget_wasted_time)
 
         provideContent {
-            WidgetContent(timeString, language)
+            WidgetContent(timeString, footerText)
         }
     }
 
     @Composable
-    private fun WidgetContent(timeString: String, language: String) {
+    private fun WidgetContent(timeString: String, footerText: String) {
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
@@ -123,7 +127,7 @@ class DoomClockWidget : GlanceAppWidget() {
             
             // Footer Text
             Text(
-                text = androidx.glance.LocalContext.current.getString(R.string.widget_wasted_time),
+                text = footerText,
                 style = TextStyle(
                     color = ColorProvider(Color(0xFFFF8888)),
                     fontSize = 10.sp,

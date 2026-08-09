@@ -29,7 +29,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.scrolldebt.utils.AppUsageInfo
-import com.example.scrolldebt.utils.Localization
 import com.example.scrolldebt.utils.TimeFormatUtils
 import com.example.scrolldebt.ui.components.DoomscrollCard
 
@@ -40,7 +39,6 @@ fun TodayScreen(
     appBreakdown: List<AppUsageInfo>,
     brutalTruthMessage: String,
     brutalTruthEnabled: Boolean,
-    language: String,
     onRefreshRoast: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -48,7 +46,7 @@ fun TodayScreen(
     val context = androidx.compose.ui.platform.LocalContext.current
 
     val totalMinutes = totalTimeMs / 1000 / 60
-    val timerText = TimeFormatUtils.formatSmartTime(context, totalMinutes, language)
+    val timerText = TimeFormatUtils.formatSmartTime(context, totalMinutes)
 
     Column(
         modifier = modifier
@@ -219,7 +217,7 @@ fun TodayScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = TimeFormatUtils.formatSmartTime(context, appMinutes, language),
+                            text = TimeFormatUtils.formatSmartTime(context, appMinutes),
                             color = MaterialTheme.colorScheme.onBackground,
                             fontSize = 13.sp,
                             fontFamily = FontFamily.Monospace

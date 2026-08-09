@@ -31,11 +31,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.MaterialTheme
-import com.example.scrolldebt.utils.Localization
 
 @Composable
 fun OnboardingScreen(
-    language: String,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current

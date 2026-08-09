@@ -8,7 +8,7 @@ object TimeFormatUtils {
      * Formats total minutes into a compact String representation (e.g., "1y 3mo" or "5d 14h")
      * showing at most the top two most significant non-zero units.
      */
-    fun formatSmartTime(context: android.content.Context, totalMinutes: Long, language: String): String {
+    fun formatSmartTime(context: android.content.Context, totalMinutes: Long): String {
         if (totalMinutes == 0L) {
             return "0" + context.getString(R.string.time_m)
         }

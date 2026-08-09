@@ -29,7 +29,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.material3.MaterialTheme
-import com.example.scrolldebt.utils.Localization
 import com.example.scrolldebt.ui.screens.LifeLostScreen
 import com.example.scrolldebt.ui.screens.OnboardingScreen
 import com.example.scrolldebt.ui.screens.SettingsScreen
@@ -43,6 +42,7 @@ fun MainScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     // Automatically check for permissions and refresh stats when app is resumed
     DisposableEffect(lifecycleOwner) {
@@ -62,10 +62,7 @@ fun MainScreen(
             androidx.compose.material3.CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
         }
     } else if (!state.hasPermission) {
-        OnboardingScreen(
-            language = state.language,
-            modifier = modifier
-        )
+        OnboardingScreen(modifier = modifier)
     } else {
         var selectedTab by androidx.compose.runtime.saveable.rememberSaveable { mutableIntStateOf(0) }
         var showLanguageMenu by remember { mutableStateOf(false) }
@@ -113,8 +110,14 @@ fun MainScreen(
                                         ) 
                                     },
                                     onClick = {
-                                        viewModel.changeLanguage(code)
                                         showLanguageMenu = false
+                                        if (state.language.lowercase() != code) {
+                                            viewModel.changeLanguage(code)
+                                            // Resources are bound to the Activity's base context, so the
+                                            // new language only takes effect after the Activity is rebuilt.
+                                            // The ViewModel is retained across this, so nothing is reloaded.
+                                            (context as? android.app.Activity)?.recreate()
+                                        }
                                     }
                                 )
                             }
@@ -182,7 +185,6 @@ fun MainScreen(
                         appBreakdown = state.appBreakdown,
                         brutalTruthMessage = state.brutalTruthMessage,
                         brutalTruthEnabled = state.brutalTruthEnabled,
-                        language = state.language,
                         onRefreshRoast = { viewModel.refreshRoastMessage() }
                     )
                     1 -> LifeLostScreen(
@@ -206,8 +208,7 @@ fun MainScreen(
                         trackingMode = state.trackingMode,
                         onTrackingModeChange = { viewModel.setTrackingMode(it) },
                         themeMode = state.themeMode,
-                        onThemeModeChange = { viewModel.setThemeMode(it) },
-                        language = state.language
+                        onThemeModeChange = { viewModel.setThemeMode(it) }
                     )
                 }
             }
