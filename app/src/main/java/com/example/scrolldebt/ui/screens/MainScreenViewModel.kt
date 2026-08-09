@@ -222,44 +222,22 @@ class MainScreenViewModel @Inject constructor(
             prefsManager.setLastNotificationDate("")
         }
         _state.update { it.copy(pushNotificationsEnabled = enabled) }
-        updateServiceState(enabled, _state.value.trackingMode)
+        applyTrackingPreferences()
     }
 
     fun setTrackingMode(mode: com.example.scrolldebt.data.repository.TrackingMode) {
         prefsManager.setTrackingMode(mode)
         prefsManager.setLastNotificationDate("") // reset lock so new mode can fire
         _state.update { it.copy(trackingMode = mode) }
-        updateServiceState(_state.value.pushNotificationsEnabled, mode)
+        applyTrackingPreferences()
     }
 
-    private fun updateServiceState(pushEnabled: Boolean, mode: com.example.scrolldebt.data.repository.TrackingMode) {
-        if (pushEnabled && mode == com.example.scrolldebt.data.repository.TrackingMode.REALTIME) {
-            val intent = Intent(context, com.example.scrolldebt.data.workers.DoomTrackerService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
-            androidx.work.WorkManager.getInstance(context).cancelUniqueWork("ScrollDebtThresholdCheck")
-        } else {
-            val intent = Intent(context, com.example.scrolldebt.data.workers.DoomTrackerService::class.java)
-            context.stopService(intent)
-            
-            if (pushEnabled && mode == com.example.scrolldebt.data.repository.TrackingMode.BATTERY_SAVER) {
-                val thresholdRequest = androidx.work.PeriodicWorkRequestBuilder<com.example.scrolldebt.data.workers.ThresholdWorker>(
-                    15, java.util.concurrent.TimeUnit.MINUTES
-                )
-                    .setInitialDelay(15, java.util.concurrent.TimeUnit.MINUTES)
-                    .build()
-                androidx.work.WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                    "ScrollDebtThresholdCheck",
-                    androidx.work.ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
-                    thresholdRequest
-                )
-            } else {
-                androidx.work.WorkManager.getInstance(context).cancelUniqueWork("ScrollDebtThresholdCheck")
-            }
-        }
+    /**
+     * Called after the user changes the notification toggle or tracking mode. Reached from the
+     * foreground, so starting a foreground service here is permitted.
+     */
+    private fun applyTrackingPreferences() {
+        com.example.scrolldebt.data.workers.TrackingScheduler.sync(context, prefsManager)
     }
 
     fun setThemeMode(mode: Int) {
