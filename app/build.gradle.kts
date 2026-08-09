@@ -1,3 +1,7 @@
+// Explicit import: inside a Kotlin DSL script, a bare `java.util.Properties` resolves the
+// leading `java` to Gradle's `java` extension rather than the package.
+import java.util.Properties
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.android)
@@ -7,6 +11,17 @@ plugins {
   id("com.google.dagger.hilt.android")
 }
 
+// Signing credentials live in keystore.properties, which is gitignored alongside the .jks.
+// Absent (CI, a fresh clone), the release build falls back to unsigned rather than failing,
+// so `assembleDebug` and `check` still work for anyone without the key.
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesFile.exists()) {
+        keystorePropertiesFile.inputStream().use { load(it) }
+    }
+}
+val hasSigningConfig = keystoreProperties.getProperty("storeFile") != null
+
 android {
     namespace = "com.example.scrolldebt"
     compileSdk = 36
@@ -14,8 +29,28 @@ android {
         applicationId = "com.scrolldebt.app"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
+
+        // androidTest/ existed but no runner was declared, so connectedAndroidTest had
+        // nothing to execute the instrumented tests with.
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        if (hasSigningConfig) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+
+                // v1 is required for API 24; v2/v3 give faster verification and key rotation.
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
+            }
+        }
     }
 
     buildTypes {
@@ -23,6 +58,9 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (hasSigningConfig) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {

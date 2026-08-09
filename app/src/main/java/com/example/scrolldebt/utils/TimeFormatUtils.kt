@@ -28,8 +28,12 @@ object TimeFormatUtils {
         val parts = mutableListOf<String>()
 
         if (y > 0) {
-            val yKey = if (y == 1L) "time_y_1" else "time_y_many"
-            parts.add("$y${context.getString(context.resources.getIdentifier(yKey, "string", context.packageName))}")
+            // Referenced as R.string constants, not via getIdentifier(). The reflective
+            // lookup was invisible to the resource shrinker, so `isShrinkResources = true`
+            // was free to strip these two strings from the release APK - leaving this line
+            // to throw Resources.NotFoundException in release only, never in debug.
+            val yearSuffix = if (y == 1L) R.string.time_y_1 else R.string.time_y_many
+            parts.add("$y${context.getString(yearSuffix)}")
         }
         if (mo > 0) {
             parts.add("$mo${context.getString(R.string.time_mo)}")
