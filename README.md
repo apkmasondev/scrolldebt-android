@@ -165,6 +165,6 @@ apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk
 - **Tryb Oszczędny** może opóźnić powiadomienie o kilkanaście minut; w trybie Doze nawet dłużej.
 - **Brak synchronizacji chmurowej.** Baza na urządzeniu to jedyna kopia historii — zmiana telefonu
   albo odinstalowanie aplikacji oznacza jej utratę.
-- **Zmiana klucza podpisu:** wersje wcześniejsze niż 1.1 były rozprowadzane jako build *debug*.
+- **Zmiana klucza podpisu:** wersje wcześniejsze niż 3.2.0 były rozprowadzane jako build *debug*.
   Aktualizacja „po wierzchu" nie zadziała — trzeba odinstalować starą wersję, co usuwa historię.
 - Powiadomienie o przekroczeniu progu wysyłane jest **raz dziennie**.

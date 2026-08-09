@@ -4,6 +4,44 @@ Ten plik zawiera zestawienie wprowadzonych zmian, naprawionych elementów interf
 
 ---
 
+## [3.2.0] - 2026-08-09
+
+Wydanie porządkujące, powstałe w wyniku pełnego audytu kodu. Pierwsza wersja rozprowadzana
+jako **podpisany build release** — wcześniej na stronie leżał build *debug* (`debuggable=true`,
+bez minifikacji, 24,6 MB, klucz debugowy). Nowy APK waży 4,3 MB.
+
+### Fixed
+
+- **Przełącznik języka nie tłumaczył interfejsu.** Cały UI szedł przez `stringResource`, czyli
+  locale systemu; `Localization.kt` z drugim kompletem tłumaczeń był importowany w 9 plikach
+  i nigdy nie wywołany. Dodano `LocaleUtils` + `attachBaseContext`.
+- **WorkManager startował bez `HiltWorkerFactory`** — domyślny `WorkManagerInitializer` nie był
+  usunięty z manifestu, więc żaden `@HiltWorker` nie mógł powstać. Tryb Oszczędny i synchronizacja
+  z bazą w praktyce nie działały.
+- **Crash przy starcie z tła** — `startForegroundService()` z `Application.onCreate()` rzuca
+  `ForegroundServiceStartNotAllowedException` na Androidzie 12+.
+- **`fallbackToDestructiveMigration()`** usunięte: baza to jedyna kopia historii użytkownika.
+- **Klucze dat zależne od locale** (zapis `Locale.getDefault()`, odczyt `Locale.US`) — na kalendarzach
+  niegregoriańskich historia rozjeżdżała się bezgłośnie. Ujednolicono na ISO przez `DateKeys`.
+- **Błąd tylko w release:** `getIdentifier()` niewidoczne dla `isShrinkResources`.
+- **Początek doby przy zmianie czasu** — `Calendar.set(HOUR_OF_DAY, 0)` zastąpione
+  `LocalDate.atStartOfDay(zone)`.
+- Roast tygodniowy losował się przy każdej rekompozycji; tydzień liczony jako 6 *rekordów*
+  zamiast 6 *dni*; wyciek `FileOutputStream` i brak `recycle()` bitmapy; brak podglądu w oknie
+  udostępniania; „Streak: 1 dni" → `<plurals>`; białe paski systemowe; grafika 540×960 zamiast 1080×1920.
+
+### Added
+
+- Podpisywanie release (`signingConfigs` + `keystore.properties` poza repozytorium).
+- `BootReceiver` — tryb Snajperski przeżywa restart urządzenia.
+- `TrackingScheduler` — jedno miejsce decydujące, który tryb śledzenia działa.
+- Odświeżanie widgetu Glance po zapisie danych.
+- `testInstrumentationRunner` (testy instrumentowane nie miały czym się uruchamiać).
+
+### Removed
+
+- `Localization.kt` (27 KB martwego kodu) i martwe deklaracje Navigation 3.
+
 ## [Unreleased]
 
 ### Added

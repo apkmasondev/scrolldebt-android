@@ -29,8 +29,10 @@ android {
         applicationId = "com.scrolldebt.app"
         minSdk = 24
         targetSdk = 36
+        // Tracks the public numbering used by CHANGELOG.md and the site's changelog, which had
+        // already reached 3.1.0 while this file still said 1.0 - it was simply never updated.
         versionCode = 2
-        versionName = "1.1"
+        versionName = "3.2.0"
 
         // androidTest/ existed but no runner was declared, so connectedAndroidTest had
         // nothing to execute the instrumented tests with.
