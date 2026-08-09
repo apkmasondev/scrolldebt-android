@@ -8,7 +8,8 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.scrolldebt.data.db.ScrollDebtDatabase
 import com.example.scrolldebt.data.models.UsageRecord
-import java.util.Locale
+import com.example.scrolldebt.widget.DoomClockWidget
+import androidx.glance.appwidget.updateAll
 
 import androidx.hilt.work.HiltWorker
 import dagger.assisted.Assisted
@@ -46,6 +47,12 @@ class DailySyncWorker @AssistedInject constructor(
 
         // Write to database
         db.usageDao().insertOrUpdateRecord(record)
+
+        // Push the fresh total to the widget. Without this the widget only ever changed on
+        // its own 30-minute system refresh, so right after a sync it could still be showing
+        // a figure from before the one we just wrote.
+        runCatching { DoomClockWidget().updateAll(applicationContext) }
+            .onFailure { android.util.Log.w("DailySyncWorker", "Widget update failed", it) }
 
         return Result.success()
     }

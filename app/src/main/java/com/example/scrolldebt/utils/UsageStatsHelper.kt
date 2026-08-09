@@ -4,7 +4,8 @@ import android.app.AppOpsManager
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.os.Process
-import java.util.Calendar
+import java.time.LocalDate
+import java.time.ZoneId
 import com.example.scrolldebt.utils.AppConstants
 import com.example.scrolldebt.data.repository.PreferencesManager
 
@@ -20,6 +21,10 @@ data class AppUsageInfo(
 class UsageStatsHelper @Inject constructor(@ApplicationContext private val context: Context) {
 
     private val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+
+    // Held rather than rebuilt per call: getTodayUsageStats() runs once a minute in Sniper
+    // mode and on every UI refresh, and each call was allocating a fresh manager.
+    private val preferencesManager by lazy { PreferencesManager(context) }
 
     fun hasUsageStatsPermission(): Boolean {
         val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
@@ -45,12 +50,14 @@ class UsageStatsHelper @Inject constructor(@ApplicationContext private val conte
             return emptyList()
         }
 
-        val calendar = Calendar.getInstance()
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        val startTime = calendar.timeInMillis
+        // Start of the local day. Deliberately not Calendar.set(HOUR_OF_DAY, 0): in time zones
+        // whose DST jump happens at midnight (e.g. America/Santiago, Asia/Beirut) 00:00 does
+        // not exist on the transition day, and Calendar silently rolls to a different instant.
+        // atStartOfDay(zone) resolves that gap to the first instant the day actually has.
+        val startTime = LocalDate.now()
+            .atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
         val endTime = System.currentTimeMillis()
 
         val usageEvents = usageStatsManager.queryEvents(startTime, endTime)
@@ -60,7 +67,6 @@ class UsageStatsHelper @Inject constructor(@ApplicationContext private val conte
         val currentSessionStart = mutableMapOf<String, Long>()
         val seenPackages = mutableSetOf<String>()
 
-        val preferencesManager = PreferencesManager(context)
         val trackedApps = preferencesManager.getTrackedApps()
 
         while (usageEvents.hasNextEvent()) {

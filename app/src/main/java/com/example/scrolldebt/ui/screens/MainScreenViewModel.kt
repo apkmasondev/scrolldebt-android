@@ -130,10 +130,10 @@ class MainScreenViewModel @Inject constructor(
             return
         }
 
-        val allStats = usageStatsHelper.getTodayUsageStats()
-        val tracked = _state.value.trackedApps
-
-        val filteredBreakdown = allStats.filter { tracked.contains(it.packageName) }
+        // getTodayUsageStats() already filters against the tracked-apps preference, which it
+        // reads fresh. Re-filtering here against the ViewModel's copy only risked dropping
+        // apps whenever that copy lagged behind what was actually stored.
+        val filteredBreakdown = usageStatsHelper.getTodayUsageStats()
         val totalMs = filteredBreakdown.sumOf { it.timeSpentMs }
 
         val roast = if (_state.value.brutalTruthEnabled) {
