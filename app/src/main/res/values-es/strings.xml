@@ -38,7 +38,6 @@
     <string name="tracked_apps_desc">Selecciona aplicaciones para monitorear su tiempo de uso.</string>
     <string name="add_other_app_btn">AÑADIR OTRA APLICACIÓN</string>
     <string name="select_app_title">Seleccionar aplicación</string>
-    <string name="streak_label">🔥 Racha: %d días</string>
     <string name="warning_threshold">UMBRAL DE ADVERTENCIA (MINUTOS)</string>
     <string name="brutal_truth_label">MENSAJES DE VERDAD BRUTAL</string>
     <string name="brutal_truth_desc">Muestra comentarios brutales y sarcásticos en lugar de estadísticas secas.</string>
@@ -73,4 +72,8 @@
     <string name="time_m">m</string>
     <string name="share_chooser_title">Comparte tu vergüenza</string>
     <string name="share_failed">No se pudo crear la imagen</string>
+    <plurals name="streak_label">
+        <item quantity="one">🔥 Racha: %d día</item>
+        <item quantity="other">🔥 Racha: %d días</item>
+    </plurals>
 </resources>

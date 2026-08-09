@@ -38,7 +38,6 @@
     <string name="tracked_apps_desc">Select apps to monitor their usage time.</string>
     <string name="add_other_app_btn">ADD OTHER APP</string>
     <string name="select_app_title">Select application</string>
-    <string name="streak_label">🔥 Streak: %d days</string>
     <string name="warning_threshold">WARNING THRESHOLD (MINUTES)</string>
     <string name="brutal_truth_label">BRUTAL TRUTH MESSAGES</string>
     <string name="brutal_truth_desc">Show brutal and sarcastic comments instead of dry statistics.</string>
@@ -73,4 +72,8 @@
     <string name="time_m">m</string>
     <string name="share_chooser_title">Share your shame</string>
     <string name="share_failed">Could not create the image</string>
+    <plurals name="streak_label">
+        <item quantity="one">🔥 Streak: %d day</item>
+        <item quantity="other">🔥 Streak: %d days</item>
+    </plurals>
 </resources>

@@ -38,7 +38,6 @@
     <string name="tracked_apps_desc">Wybierz aplikacje do śledzenia czasu.</string>
     <string name="add_other_app_btn">DODAJ INNĄ APLIKACJĘ</string>
     <string name="select_app_title">Wybierz aplikację</string>
-    <string name="streak_label">🔥 Streak: %d dni</string>
     <string name="warning_threshold">PRÓG OSTRZEŻENIA (MINUTY)</string>
     <string name="brutal_truth_label">KOMUNIKATY BRUTAL TRUTH</string>
     <string name="brutal_truth_desc">Wyświetlaj brutalne i sarkastyczne komentarze zamiast suchych statystyk.</string>
@@ -73,4 +72,10 @@
     <string name="time_m">m</string>
     <string name="share_chooser_title">Udostępnij swój wstyd</string>
     <string name="share_failed">Nie udało się utworzyć grafiki</string>
+    <plurals name="streak_label">
+        <item quantity="one">🔥 Streak: %d dzień</item>
+        <item quantity="few">🔥 Streak: %d dni</item>
+        <item quantity="many">🔥 Streak: %d dni</item>
+        <item quantity="other">🔥 Streak: %d dnia</item>
+    </plurals>
 </resources>

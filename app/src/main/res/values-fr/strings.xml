@@ -38,7 +38,6 @@
     <string name="tracked_apps_desc">Sélectionnez les applications à surveiller.</string>
     <string name="add_other_app_btn">AJOUTER UNE AUTRE APP</string>
     <string name="select_app_title">Sélectionner une application</string>
-    <string name="streak_label">🔥 Série : %d jours</string>
     <string name="warning_threshold">SEUIL D\'AVERTISSEMENT (MINUTES)</string>
     <string name="brutal_truth_label">MESSAGES DE VÉRITÉ BRUTALE</string>
     <string name="brutal_truth_desc">Affiche des commentaires brutaux et sarcastiques au lieu de statistiques sèches.</string>
@@ -73,4 +72,8 @@
     <string name="time_m">m</string>
     <string name="share_chooser_title">Partagez votre honte</string>
     <string name="share_failed">Impossible de créer l\'image</string>
+    <plurals name="streak_label">
+        <item quantity="one">🔥 Série : %d jour</item>
+        <item quantity="other">🔥 Série : %d jours</item>
+    </plurals>
 </resources>

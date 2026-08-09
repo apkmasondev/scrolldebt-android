@@ -18,6 +18,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.example.scrolldebt.R
 import androidx.compose.runtime.getValue
@@ -83,7 +84,10 @@ fun TodayScreen(
 
         // Streak Widget
         if (streakDays > 0) {
-            val streakLabel = String.format(stringResource(R.string.streak_label), streakDays)
+            // pluralStringResource, not String.format on a single hardcoded form: the old
+            // version rendered "Streak: 1 days", and Polish needs three forms
+            // (1 dzien / 2-4 dni / 5+ dni), which a single string cannot express.
+            val streakLabel = pluralStringResource(R.plurals.streak_label, streakDays, streakDays)
             Box(
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
