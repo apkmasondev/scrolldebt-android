@@ -1,117 +1,170 @@
 # ScrollDebt — Cyfrowe Lustro Twojego Czasu
 
-**ScrollDebt** to minimalistyczna aplikacja na system Android zaprojektowana, aby pokazać Ci brutalną prawdę o czasie marnowanym na bezmyślne przeglądanie mediów społecznościowych (tzw. doomscrolling). Aplikacja nie blokuje dostępu, nie prawi kazań — działa jak psychologiczne lustro.
+**ScrollDebt** to minimalistyczna aplikacja na Androida, która pokazuje, ile czasu naprawdę tracisz
+na bezmyślne przeglądanie mediów społecznościowych. Nie blokuje aplikacji i nie prawi kazań —
+działa jak lustro.
 
-Aplikacja opiera się na estetyce czarnego minimalizmu Nothing OS z czerwonymi akcentami oraz wsparciem dla motywu Jasnego i Ciemnego.
-
----
-
-## 📱 Funkcje Aplikacji i Zaimplementowana Logika
-
-### 1. Ekran Główny — "DZIŚ" (`TodayScreen.kt`)
-* **Co robi:** Pokazuje duży, cyfrowy zegar z sumą czasu zmarnowanego dziś, widget Dobrej Passy (Streak) oraz listę top 5 najbardziej uzależniających aplikacji z paskami postępu.
-* **Jak działa pod spodem:**
-  - Odpytuje systemowy `UsageStatsManager` za pośrednictwem klasy `UsageStatsHelper.kt` o statystyki użycia aplikacji od godziny 00:00 dnia dzisiejszego.
-  - Filtruje wyniki na podstawie pakietów aplikacji zaznaczonych przez użytkownika w Ustawieniach.
-  - Otrzymuje historyczne dane z `Room Database`, zliczając **Dobrą Passę (Streak)** — czyli ilość dni z rzędu bez przekraczania ustawionego progu czasowego.
-  - Sortuje aplikacje malejąco według czasu i rysuje paski postępu (`LinearProgressIndicator`), gdzie długość paska jest proporcjonalna do aplikacji o najwyższym zużyciu czasu. Paski są **płynnie animowane** (`animateFloatAsState`) od 0% do stanu faktycznego przy otwieraniu ekranu.
-
-### 2. Komunikaty "Brutalna Prawda" (`BrutalTruthEngine.kt`)
-* **Co robi:** Wyświetla bezpośrednie, ironiczne i bolesne komentarze psychologiczne zamiast nudnych statystyk.
-* **Jak działa pod spodem:**
-  - Silnik analizuje strukturę Twojego dzisiejszego długu czasowego.
-  - Posiada bazę **~200 zlokalizowanych komunikatów** podzielonych na kategorie czasowe: **krótkie** (<30 min), **średnie** (<120 min) oraz **długie** (>120 min).
-  - Wykrywa tzw. *dominant app* (aplikację, na której spędziłeś jednorazowo >10 minut) i z prawdopodobieństwem 40% dobiera komunikat dedykowany specjalnie dla niej.
-  - **Algorytm bez powtórzeń:** Silnik korzysta z pamięci stanu (zbiór `seenQuotes`), gwarantując, że nigdy nie zobaczysz tego samego cytatu, dopóki nie wyczerpiesz całej dostępnej puli.
-  - Posiada pełne wsparcie dla wersji językowych: **polskiej (PL), angielskiej (EN), hiszpańskiej (ES), francuskiej (FR) oraz niemieckiej (DE)**.
-  - **Dynamiczne znikanie:** Po wyłączeniu komunikatów w ustawieniach, cały baner **znika całkowicie** z ekranu głównego za pomocą płynnej animacji składania i zanikania (`AnimatedVisibility`), chroniąc czysty minimalistyczny interfejs i uniemożliwiając przypadkowe generowanie roastu.
-
-### 3. Ekran "STRACONE" (`LifeLostScreen.kt`)
-* **Co robi:** Przelicza skumulowany zmarnowany czas na namacalne, życiowe alternatywy oraz pozwala wygenerować **grafikę udostępniania (Share My Shame)**.
-* **Jak działa pod spodem:**
-  - Odczytuje dane historyczne z lokalnej bazy danych SQLite (Room DB) i sumuje je z dzisiejszym czasem.
-  - Wykorzystuje natywne `Canvas`, by generować obraz 1080x1920 (dla relacji Instagram/TikTok) z tygodniowym rozkładem użycia.
-  - **Dynamiczne rangi i roasty:** Silnik (`BrutalTruthEngine`) analizuje czas i przydziela jedną z **5 rang** (Rookie, Scroll Junkie, Digital Zombie, No Life, Brain Dead). Do rangi losowany jest jeden z **75 wariantów tekstowych** (w 3 językach), co zapewnia pełną różnorodność grafik.
-  - Udostępnia plik przez aplikacje zewnętrzne z użyciem `FileProvider`.
-  - Dokonuje matematycznego przeliczenia całkowitej liczby godzin na:
-    - **Stracone Dni:** Czyste 24-godzinne doby całkowicie wyjęte z życiorysu (`godziny / 24`).
-    - **Cykle Snu:** Liczba zdrowych, pełnych 90-minutowych cykli regeneracyjnych, które mogłeś przespać (`godziny / 1.5`).
-    - **Opuszczone Treningi:** Liczba pełnych, półtoragodzinnych sesji na siłowni, które przepadły (`godziny / 1.5`).
-    - **Przeczytane Książki:** Liczba średnich 250-stronicowych książek, które mogłeś przeczytać (`godziny / 4`).
-    - **Przebiegnięte Maratony:** Ilość maratonów pokonanych w średnim tempie (`godziny / 4.5`).
-    - **Obejrzane Filmy:** Klasyki kina, które mogłeś nadrobić w tym czasie (`godziny / 2`).
-    - **Nowe Umiejętności:** Biegłe opanowanie nowej pasji na poziomie średniozaawansowanym (`godziny / 100`).
-
-### 4. Ekran "USTAWIENIA" (`SettingsScreen.kt`)
-* **Co robi:** Pozwala na personalizację monitorowania, dynamiczną zmianę języka aplikacji, progi ostrzeżeń oraz powiadomienia.
-* **Jak działa pod spodem:**
-  - **Śledzone Aplikacje (Dynamiczne):** Zamiast sztywnej listy, aplikacja skanuje Twój telefon w poszukiwaniu zainstalowanych aplikacji (za pomocą bezpiecznego tagu `<queries>` w Manifest) i ukrywa te, których nie posiadasz. Pozwala również dobrać do śledzenia absolutnie **każdą** zainstalowaną grę czy komunikator z poziomu eleganckiego dolnego panelu (ModalBottomSheet). Każda pozycja to estetyczna karta. Zaznaczenie checkboxa aktualizuje listę śledzonych pakietów w preferencjach i natychmiastowo przelicza dzisiejsze statystyki.
-  - **Przełącznik Języka (EN / ES / FR / DE / PL):** Segmentowy przełącznik na samej górze ekranu. Zmiana języka natychmiast przebudowuje interfejs w locie, w tym losuje nowy komunikat "Brutal Truth" w odpowiednim języku. Kolejność od najpopularniejszego na świecie.
-  - **Motyw Jasny / Ciemny:** Możliwość błyskawicznej zmiany motywu aplikacji bezpośrednio z ustawień. Aplikacja natychmiastowo przebudowuje wszystkie kolory za pomocą dynamicznej palety `MaterialTheme.colorScheme`.
-  - **Hybrydowy System Powiadomień (V2.0):** Potężna nowa architektura monitorowania czasu w tle pozwalająca na wybór między:
-    - **Trybem Snajperskim:** Używa `Foreground Service` wybudzającego się co 60 sekund. Daje absolutną pewność powiadomienia na czas, ale wymaga stałej ikony na pasku powiadomień.
-    - **Trybem Oszczędnym:** Wykorzystuje tradycyjny system `WorkManager`. Powiadomienia mogą mieć do kilkunastu minut opóźnienia, ale zyskujemy maksymalną oszczędność baterii i czysty pasek stanu.
-  - **Powiadomienia Push i Ich Próg:** Suwak od 30 do 180 minut pozwalający precyzyjnie dobrać dzienny limit. Przekroczenie limitu wywoła natywne powiadomienie z bolesnym cytatem (widoczne tylko, gdy powiadomienia są włączone).
-  - **Próg Dobrej Passy (Streak Threshold):** Oddzielny suwak pozwalający ustalić maksymalny czas spędzony w social mediach, którego nieprzekroczenie podtrzymuje Twoją dzienną passę na ekranie głównym.
-
-### 5. Ekran Powitalny (`OnboardingScreen.kt`)
-* **Co robi:** Wprowadza użytkownika w filozofię aplikacji i prosi o przyznanie wymaganego uprawnienia systemowego.
-* **Jak działa pod spodem:**
-  - Tłumaczy zasady działania aplikacji (brak chmury, 100% prywatności).
-  - Udostępnia przycisk "PRZYZNAJ DOSTĘP", który otwiera intencję systemową ustawień systemu Android: `Settings.ACTION_USAGE_ACCESS_SETTINGS`.
-  - Po powrocie z ustawień systemowych aplikacja automatycznie wykrywa przyznane uprawnienie (poprzez cykl życia `ON_RESUME`) i przenosi użytkownika do głównej części aplikacji.
+Estetyka: czarny minimalizm w duchu Nothing OS z czerwonymi akcentami, z obsługą motywu jasnego
+i ciemnego. Wszystkie dane pozostają na urządzeniu — aplikacja nie ma backendu ani analityki.
 
 ---
 
-## 🛠️ Architektura Techniczna i Przepływ Danych
+## 📱 Funkcje i faktyczna implementacja
+
+### 1. Ekran „DZIŚ" (`TodayScreen.kt`)
+
+Duży zegar z sumą dzisiejszego czasu, widget Dobrej Passy i lista top 5 aplikacji z paskami postępu.
+
+- Odpytuje `UsageStatsManager` przez `UsageStatsHelper.kt`, licząc zdarzenia `ACTIVITY_RESUMED` /
+  `ACTIVITY_PAUSED` od lokalnej północy.
+- Filtruje wyniki po pakietach wybranych w Ustawieniach.
+- **Dobra Passa** to liczba kolejnych dni (licząc wstecz od dzisiaj), w których suma nie przekroczyła
+  progu passy. Dni bez rekordu w bazie traktowane są jako „poniżej progu", ale cofamy się tylko do
+  najstarszego posiadanego rekordu — świeża instalacja nie może odziedziczyć passy z przeszłości.
+- Paski są proporcjonalne do aplikacji o najwyższym czasie i animowane (`animateFloatAsState`)
+  **przy zmianie wartości**. Nie ma animacji „od 0%" przy wejściu na ekran.
+
+### 2. Komunikaty „Brutalna Prawda" (`BrutalTruthEngine.kt`)
+
+- Pula: **45 komunikatów ogólnych** (3 przedziały × 15) i **27 komunikatów przypisanych do konkretnych
+  aplikacji** na każdy język. Przy 5 językach daje to **360 tekstów**. Wszystkie 5 języków mają
+  komplet — nie ma luk tłumaczeniowych.
+- Przedziały czasowe: krótki (<30 min), średni (<120 min), długi (≥120 min).
+- Jeśli istnieje aplikacja z czasem >10 min, z prawdopodobieństwem 40% komunikat jest dobierany
+  spośród dedykowanych dla niej.
+- **Bez powtórzeń w obrębie sesji:** zbiór `seenQuotes` gwarantuje wyczerpanie puli przed powtórką.
+  Zbiór jest trzymany **wyłącznie w pamięci** i zeruje się po ubiciu procesu — to celowy kompromis,
+  żeby nie zapisywać kilkuset stringów na dysk przy każdym roaście.
+- Wyłączenie komunikatów w Ustawieniach ukrywa cały baner animacją `AnimatedVisibility`.
+
+### 3. Ekran „STRACONE" (`LifeLostScreen.kt`)
+
+Przelicza skumulowany czas na życiowe alternatywy i generuje grafikę do udostępnienia.
+
+- Sumuje historię z Room DB z dzisiejszym czasem.
+- Rysuje wykres tygodniowy (7 ostatnich dni kalendarzowych) oraz sekcję **Przepalone pieniądze**
+  (stawka godzinowa zależna od wybranego języka).
+- **Share My Shame:** natywne `Canvas` generuje obraz **1080×1920** (format relacji IG/TikTok)
+  udostępniany przez `FileProvider` (konfiguracja w `res/xml/file_paths.xml`). Grafika zawiera
+  rangę i roast tygodniowy — **nie** zawiera wykresu.
+- **Rangi:** 5 progów (Rookie, Scroll Junkie, Digital Zombie, No Life, Brain Dead), do każdej
+  losowany jest 1 z 5 wariantów tekstowych, w 5 językach — łącznie **125 wariantów**.
+- Przeliczniki (na podstawie sumy godzin): dni `/24`, cykle snu `/1.5`, treningi `/1.5`,
+  książki `/4`, maratony `/4.5`, filmy `/2`, nowe umiejętności `/100`.
+
+### 4. Ekran „USTAWIENIA" (`SettingsScreen.kt`)
+
+- **Śledzone aplikacje:** skanowanie zainstalowanych aplikacji przez tag `<queries>` z filtrem
+  `MAIN`/`LAUNCHER` (zgodne z polityką Play — bez `QUERY_ALL_PACKAGES`). Dowolną aplikację można
+  dodać z dolnego panelu (`ModalBottomSheet`).
+- **Motyw jasny / ciemny** — przebudowuje kolory przez `MaterialTheme.colorScheme`; paski systemowe
+  podążają za wyborem.
+- **Hybrydowy system powiadomień:**
+  - *Tryb Snajperski* — `Foreground Service` budzący się co 60 s; wymaga stałej ikony.
+  - *Tryb Oszczędny* — `WorkManager` z interwałem 15 min (minimum narzucone przez system).
+  - Tryby wykluczają się wzajemnie; włączenie jednego wyłącza drugi (`TrackingScheduler.kt`).
+- **Próg powiadomień** i **próg Dobrej Passy** — dwa niezależne suwaki, zakres **15–300 minut**.
+
+> **Uwaga:** przełącznik języka **nie** znajduje się na ekranie Ustawień. Jest to menu pod ikoną
+> globusa na górnym pasku, dostępne z każdego ekranu.
+
+### 5. Przełącznik języka (EN / ES / FR / DE / PL)
+
+Menu globusa na górnym pasku. Zmiana języka zapisuje preferencję i wywołuje `recreate()` Activity —
+`MainActivity.attachBaseContext` podmienia `Context` na zlokalizowany (`LocaleUtils.kt`), dzięki
+czemu tłumaczy się **cały** interfejs, a nie tylko treści dynamiczne. ViewModel przeżywa
+przeładowanie, więc dane nie są ładowane ponownie.
+
+### 6. Ekran powitalny (`OnboardingScreen.kt`)
+
+- Wyjaśnia zasadę działania i zawiera wymaganą przez Google Play informację o zbieraniu danych
+  użycia (checkbox zgody odblokowuje przycisk).
+- Przycisk otwiera `Settings.ACTION_USAGE_ACCESS_SETTINGS`.
+- Po powrocie aplikacja wykrywa uprawnienie w `ON_RESUME` i przechodzi dalej.
+
+---
+
+## 🛠️ Architektura i przepływ danych
 
 ```mermaid
 graph TD
-    A[UsageStatsManager API] -->|Odczyt co 15 minut| B[DailySyncWorker - WorkManager]
-    B -->|Zapis do DB| C[(Room Database - SQLite)]
-    C -->|Obserwacja zmian| D[MainScreenViewModel]
-    E[PreferencesManager - SharedPreferences] -->|Konfiguracja filtrów i języka| D
-    D -->|Przekazanie stanu| F[Jetpack Compose UI - Screens]
+    A[UsageStatsManager API] -->|Odczyt na żądanie| B[UsageStatsHelper]
+    B --> C[DailySyncWorker - WorkManager, co 4 h]
+    C -->|Zapis| D[(Room Database - SQLite)]
+    D -->|Odczyt przy odświeżeniu| E[MainScreenViewModel]
+    B -->|Odczyt na żywo| E
+    F[PreferencesManager - SharedPreferences] --> E
+    E -->|StateFlow| G[Jetpack Compose UI]
 ```
 
-### Stack Technologiczny
-* **Język:** Kotlin (100% natywnie)
-* **UI:** Jetpack Compose (z niestandardowym motywem minimalistycznym Nothing OS)
-* **Baza Danych:** Room (SQLite) - przechowuje historię dób w tabeli `UsageRecord`
-* **Zadania w Tle:** WorkManager (`DailySyncWorker.kt`) - wykonuje synchronizację danych co 4 godziny w tle
-* **Stan:** StateFlow i ViewModel z natychmiastową reakcją na zmiany preferencji użytkownika
-* **Nawigacja:** Stanowe przełączanie widoków w Compose (Today/Life Lost/Settings/Onboarding). Projekt jest przygotowany pod wdrożenie Jetpack Compose Navigation 3 (zależności zdefiniowane w `libs.versions.toml`).
+`DailySyncWorker` działa **co 4 godziny**, z opóźnieniem pierwszego uruchomienia o 15 minut.
+ViewModel **nie obserwuje** bazy reaktywnie — odczytuje ją przy odświeżeniu ekranu (`ON_RESUME`)
+oraz po zmianach ustawień.
+
+### Stack technologiczny
+
+| Warstwa | Rozwiązanie |
+|---|---|
+| Język | Kotlin |
+| UI | Jetpack Compose (Material 3, motyw własny) |
+| DI | Hilt |
+| Baza | Room (SQLite), tabela `UsageRecord`, klucz `date` w formacie ISO `YYYY-MM-DD` |
+| Zadania w tle | WorkManager (`DailySyncWorker`, `ThresholdWorker`) + `DoomTrackerService` |
+| Widget | Glance |
+| Stan | `StateFlow` + `ViewModel` |
+| Nawigacja | przełączanie widoków przez `when (selectedTab)` w `MainScreen` |
+
+Projekt **nie używa** Jetpack Compose Navigation — ani jako zależności, ani w kodzie.
 
 ---
 
-## 🚀 Jak Uruchomić i Kompilować Projekt
+## 🚀 Budowanie
 
-1. Wymagane środowisko: **Android Studio Jellyfish+** oraz **JDK 17**.
-2. Otwórz projekt w folderze `ScrollDebt`.
-3. Aby zbudować i przetestować aplikację z poziomu terminala, użyj Gradle Wrapper:
-   ```bash
-   # Kompilacja kodu Kotlin
-   .\gradlew compileDebugKotlin
-   
-   # Zbudowanie instalatora APK
-   .\gradlew assembleDebug
-   ```
-4. Po zainstalowaniu na urządzeniu konieczne jest przyznanie uprawnienia **Dostęp do danych użycia** (aplikacja przekieruje Cię tam automatycznie przy pierwszym uruchomieniu).
+Wymagania: **Android Studio** oraz **JDK 17+** (`jvmToolchain(17)`), `compileSdk`/`targetSdk` 36,
+`minSdk` 24 (Android 7.0).
+
+```bash
+./gradlew assembleDebug
+```
+
+### Build release (podpisany)
+
+Podpisywanie czyta `keystore.properties` z katalogu głównego projektu. Plik ten oraz `.jks`
+są w `.gitignore` i **nigdy** nie trafiają do repozytorium:
+
+```properties
+storeFile=release-key.jks
+storePassword=...
+keyAlias=scrolldebt
+keyPassword=...
+```
+
+```bash
+./gradlew assembleRelease
+```
+
+Bez `keystore.properties` build release nadal przechodzi, ale produkuje APK niepodpisany —
+dzięki temu świeży klon można zbudować i przetestować bez dostępu do klucza.
+
+Weryfikacja podpisu:
+
+```bash
+apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk
+```
 
 ---
 
-## 📲 Instalacja APK na Telefonie
+## ⚠️ Znane ograniczenia
 
-1. Zbuduj plik APK poleceniem `.\gradlew assembleDebug`.
-2. Plik wynikowy znajdziesz w `ScrollDebt/app/build/outputs/apk/debug/app-debug.apk`.
-3. Prześlij plik na telefon (np. kablem USB, ADB lub dyskiem w chmurze).
-4. Na telefonie otwórz plik APK i zaakceptuj instalację z nieznanego źródła (Android może poprosić o zgodę).
-5. Po uruchomieniu aplikacja poprosi o uprawnienie **Dostęp do danych użycia**.
-
----
-
-## ⚠️ Znane Ograniczenia i Prace w Toku
-
-- **Cykl odświeżania widżetu:** Android wymusza minimum 30 minut między aktualizacjami widżetu Glance, więc czas na widżecie może być nieaktualny.
-- **Tryb Snajperski a bateria:** Foreground Service zużywa więcej baterii — użytkownik jest o tym informowany w ustawieniach.
-- **Brak synchronizacji chmurowej:** Wszystkie dane są przechowywane wyłącznie lokalnie. Zmiana telefonu oznacza utratę historii.
+- **Widget Glance** odświeża się co 30 minut (`updatePeriodMillis`) — to minimum narzucone przez
+  system, więc czas na widżecie bywa nieaktualny. Widget nie jest odświeżany po zmianie danych
+  w aplikacji.
+- **Tryb Snajperski a bateria:** `Foreground Service` zużywa więcej energii. Nie wstaje też
+  automatycznie po starcie systemu w tle na Androidzie 12+ — wraca przy pierwszym otwarciu aplikacji
+  (Android zabrania startu usługi pierwszoplanowej z tła).
+- **Tryb Oszczędny** może opóźnić powiadomienie o kilkanaście minut; w trybie Doze nawet dłużej.
+- **Brak synchronizacji chmurowej.** Baza na urządzeniu to jedyna kopia historii — zmiana telefonu
+  albo odinstalowanie aplikacji oznacza jej utratę.
+- **Zmiana klucza podpisu:** wersje wcześniejsze niż 1.1 były rozprowadzane jako build *debug*.
+  Aktualizacja „po wierzchu" nie zadziała — trzeba odinstalować starą wersję, co usuwa historię.
+- Powiadomienie o przekroczeniu progu wysyłane jest **raz dziennie**.
