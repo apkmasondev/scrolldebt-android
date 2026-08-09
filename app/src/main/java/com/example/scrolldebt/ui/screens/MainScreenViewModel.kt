@@ -42,6 +42,12 @@ data class MainUiState(
     val pushNotificationsEnabled: Boolean = false,
     val currentStreakDays: Int = 0,
     val weeklyTotalTimeMs: Long = 0L,
+    /**
+     * Roast shown on the "Life Lost" screen and burned into the shared image.
+     * Held in state rather than generated in the composable: it is randomised, so
+     * deriving it during composition made it change on every scroll.
+     */
+    val weeklyRoast: String = "",
     // Must match PreferencesManager.getTrackingMode()'s default, otherwise Settings briefly
     // renders "Sniper" selected before loadSettings() replaces it with the stored value.
     val trackingMode: com.example.scrolldebt.data.repository.TrackingMode = com.example.scrolldebt.data.repository.TrackingMode.BATTERY_SAVER,
@@ -295,6 +301,15 @@ class MainScreenViewModel @Inject constructor(
             weeklyTotal += recordsMap[today.minusDays(i.toLong()).toString()]?.totalTimeMs ?: 0L
         }
 
-        _state.update { it.copy(currentStreakDays = streak, weeklyTotalTimeMs = weeklyTotal) }
+        val weekHours = weeklyTotal.toDouble() / 1000 / 60 / 60
+        val roast = truthEngine.getWeeklyRoast(weekHours, _state.value.language)
+
+        _state.update {
+            it.copy(
+                currentStreakDays = streak,
+                weeklyTotalTimeMs = weeklyTotal,
+                weeklyRoast = roast
+            )
+        }
     }
 }

@@ -190,6 +190,7 @@ fun MainScreen(
                     1 -> LifeLostScreen(
                         todayTimeMs = state.todayTotalTimeMs,
                         weeklyTimeMs = state.weeklyTotalTimeMs,
+                        weeklyRoast = state.weeklyRoast,
                         historicalRecords = state.historicalRecords,
                         language = state.language
                     )

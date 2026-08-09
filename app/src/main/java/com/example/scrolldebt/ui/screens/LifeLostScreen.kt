@@ -36,6 +36,7 @@ import com.example.scrolldebt.data.models.UsageRecord
 fun LifeLostScreen(
     todayTimeMs: Long,
     weeklyTimeMs: Long,
+    weeklyRoast: String,
     historicalRecords: List<UsageRecord>,
     language: String,
     modifier: Modifier = Modifier
@@ -79,10 +80,10 @@ fun LifeLostScreen(
     }
     val wastedMoney = totalHours * moneyRate
 
-    // Weekly aggregate (past 7 days including today)
-    val pastWeekRecords = pastRecords.take(6) // past 6 days from DB (excluding today)
-    val weekTotalMs = todayTimeMs + pastWeekRecords.sumOf { it.totalTimeMs }
-    val weekHours = weekTotalMs.toDouble() / 1000 / 60 / 60
+    // Supplied by the ViewModel, which sums the last seven *calendar days*. Computing it
+    // here as "the six most recent rows" was wrong whenever a day was missing from the
+    // database: with gaps, those six rows could reach back weeks.
+    val weekTotalMs = weeklyTimeMs
 
     Column(
         modifier = modifier
@@ -169,7 +170,7 @@ fun LifeLostScreen(
         Spacer(modifier = Modifier.height(28.dp))
 
         // Chart Section
-        if (pastWeekRecords.isNotEmpty() || todayTimeMs > 0) {
+        if (pastRecords.isNotEmpty() || todayTimeMs > 0) {
             Text(
                 text = stringResource(R.string.weekly_chart),
                 color = MaterialTheme.colorScheme.tertiary,
@@ -452,9 +453,6 @@ fun LifeLostScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Share Button
-        val context = LocalContext.current
-        val roastText = com.example.scrolldebt.domain.usecases.BrutalTruthEngine(context).getWeeklyRoast(weekHours, language)
-
         val shareLabel = when (language.lowercase()) {
             "en" -> "SHARE MY SHAME"
             "es" -> "COMPARTIR MI VERGÜENZA"
@@ -476,7 +474,7 @@ fun LifeLostScreen(
                     ShareUtils.shareWeeklyRoast(
                         context = context,
                         weeklyTimeMs = weekTotalMs,
-                        roastText = roastText,
+                        roastText = weeklyRoast,
                         titleText = titleText,
                         wastedText = wastedText,
                         language = language

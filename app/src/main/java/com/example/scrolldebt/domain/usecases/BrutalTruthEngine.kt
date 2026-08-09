@@ -11,7 +11,20 @@ data class TruthMessage(
 
 class BrutalTruthEngine(private val context: Context) {
 
+    /**
+     * Quotes already shown, so the engine exhausts a pool before repeating itself.
+     *
+     * Guarded because this is a Hilt singleton reached concurrently from the ViewModel
+     * (Dispatchers.IO), DoomTrackerService's polling loop and ThresholdWorker's worker
+     * thread; an unsynchronised LinkedHashSet was one interleaving away from
+     * ConcurrentModificationException.
+     *
+     * Deliberately in-memory only: it resets when the process dies, which is acceptable
+     * for a "don't repeat yourself too soon" heuristic and avoids persisting several
+     * hundred strings to disk on every roast.
+     */
     private val seenQuotes = mutableSetOf<String>()
+    private val seenQuotesLock = Any()
 
     // POLISH ROASTS
     private val generalShortTruthsPl = listOf(
@@ -562,18 +575,20 @@ class BrutalTruthEngine(private val context: Context) {
             return fallbackMessage(lang)
         }
 
-        // We guarantee seeing all possible quotes before repeating
-        var choices = candidateList.filter { !seenQuotes.contains(it) }
-        
-        // If all quotes in this pool have been seen, reset the seen set for these candidates
-        if (choices.isEmpty()) {
-            candidateList.forEach { seenQuotes.remove(it) }
-            choices = candidateList 
-        }
+        synchronized(seenQuotesLock) {
+            // Show every quote in the pool before any of them comes round again.
+            var choices = candidateList.filter { !seenQuotes.contains(it) }
 
-        val chosen = choices.random()
-        seenQuotes.add(chosen)
-        return chosen
+            // Pool exhausted: forget only this pool, so other pools keep their history.
+            if (choices.isEmpty()) {
+                candidateList.forEach { seenQuotes.remove(it) }
+                choices = candidateList
+            }
+
+            val chosen = choices.random()
+            seenQuotes.add(chosen)
+            return chosen
+        }
     }
 
     private fun fallbackMessage(lang: String): String {
