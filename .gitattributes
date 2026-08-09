@@ -1,0 +1,13 @@
+# Normalise line endings so Windows/Linux checkouts produce identical blobs.
+* text=auto eol=lf
+
+# Gradle wrapper script must stay executable and LF-terminated.
+gradlew text eol=lf
+gradlew.bat text eol=crlf
+
+# Binary assets — never touch these.
+*.png binary
+*.jpg binary
+*.jar binary
+*.apk binary
+*.jks binary
