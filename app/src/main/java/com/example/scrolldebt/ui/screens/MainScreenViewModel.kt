@@ -42,7 +42,9 @@ data class MainUiState(
     val pushNotificationsEnabled: Boolean = false,
     val currentStreakDays: Int = 0,
     val weeklyTotalTimeMs: Long = 0L,
-    val trackingMode: com.example.scrolldebt.data.repository.TrackingMode = com.example.scrolldebt.data.repository.TrackingMode.REALTIME,
+    // Must match PreferencesManager.getTrackingMode()'s default, otherwise Settings briefly
+    // renders "Sniper" selected before loadSettings() replaces it with the stored value.
+    val trackingMode: com.example.scrolldebt.data.repository.TrackingMode = com.example.scrolldebt.data.repository.TrackingMode.BATTERY_SAVER,
     val themeMode: Int = 2
 )
 
@@ -271,51 +273,48 @@ class MainScreenViewModel @Inject constructor(
         refreshRoastMessage()
     }
 
+    /**
+     * A streak is the run of consecutive days, ending today, whose total stays at or under
+     * the streak threshold. Today counts from the live figure; earlier days come from the
+     * database.
+     *
+     * Days with no record are treated as under-threshold, because the sync worker simply may
+     * not have run - but we only walk back as far as the oldest row we actually hold, so a
+     * fresh install cannot claim a streak stretching into the past.
+     *
+     * Uses [java.time.LocalDate] rather than Calendar: the previous version compared a
+     * Calendar carrying the current wall-clock time against a date parsed at midnight, so the
+     * "older than the oldest record" guard depended on what time of day it happened to run.
+     */
     private fun recalculateStreakAndWeekly(todayMs: Long, records: List<UsageRecord>, thresholdMin: Int) {
         val thresholdMs = thresholdMin * 60 * 1000L
+        val recordsMap = records.associateBy { it.date }
+        val today = java.time.LocalDate.now()
+
         var streak = 0
         if (todayMs <= thresholdMs) {
-            streak++
-        }
+            streak = 1
 
-        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
-        val cal = java.util.Calendar.getInstance()
-        cal.add(java.util.Calendar.DAY_OF_YEAR, -1)
-        val recordsMap = records.associateBy { it.date }
-        
-        if (records.isNotEmpty()) {
-            val oldestRecordStr = records.last().date
-            val oldestDate = sdf.parse(oldestRecordStr)
-            
-            while (streak > 0) {
-                val dateStr = sdf.format(cal.time)
+            // records is ordered by date DESC, so the last row is the oldest one we have.
+            val oldestDate = records.lastOrNull()?.date?.let {
+                runCatching { java.time.LocalDate.parse(it) }.getOrNull()
+            }
 
-                // Przerwij, jeśli doszliśmy do daty starszej niż najstarszy rekord w bazie
-                if (oldestDate != null && cal.time.before(oldestDate) && dateStr != oldestRecordStr) {
-                    break
-                }
-
-                val record = recordsMap[dateStr]
-                val timeSpent = record?.totalTimeMs ?: 0L
-                
-                if (timeSpent <= thresholdMs) {
+            if (oldestDate != null) {
+                var day = today.minusDays(1)
+                while (!day.isBefore(oldestDate)) {
+                    val timeSpent = recordsMap[day.toString()]?.totalTimeMs ?: 0L
+                    if (timeSpent > thresholdMs) break
                     streak++
-                    cal.add(java.util.Calendar.DAY_OF_YEAR, -1)
-                } else {
-                    break
+                    day = day.minusDays(1)
                 }
-                
-                // Safety net to prevent infinite loops (max 10 years streak)
-                if (streak > 3650) break
             }
         }
 
-        val calWeekly = java.util.Calendar.getInstance()
+        // Rolling 7-day window: today plus the six preceding calendar days.
         var weeklyTotal = todayMs
         for (i in 1..6) {
-            calWeekly.add(java.util.Calendar.DAY_OF_YEAR, -1)
-            val dateStr = sdf.format(calWeekly.time)
-            weeklyTotal += recordsMap[dateStr]?.totalTimeMs ?: 0L
+            weeklyTotal += recordsMap[today.minusDays(i.toLong()).toString()]?.totalTimeMs ?: 0L
         }
 
         _state.update { it.copy(currentStreakDays = streak, weeklyTotalTimeMs = weeklyTotal) }

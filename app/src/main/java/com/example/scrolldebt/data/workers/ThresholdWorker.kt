@@ -1,6 +1,7 @@
 package com.example.scrolldebt.data.workers
 
 import android.app.NotificationChannel
+import com.example.scrolldebt.utils.DateKeys
 import com.example.scrolldebt.utils.UsageStatsHelper
 import com.example.scrolldebt.data.repository.PreferencesManager
 import com.example.scrolldebt.utils.AppUsageInfo
@@ -15,8 +16,6 @@ import androidx.work.WorkerParameters
 import com.example.scrolldebt.MainActivity
 import com.example.scrolldebt.R
 import com.example.scrolldebt.domain.usecases.BrutalTruthEngine
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 import androidx.hilt.work.HiltWorker
@@ -52,8 +51,7 @@ class ThresholdWorker @AssistedInject constructor(
         val thresholdMs = prefs.getNotificationThresholdMinutes() * 60 * 1000L
 
         if (totalMs > thresholdMs) {
-            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val todayString = sdf.format(Date())
+            val todayString = DateKeys.today()
             
             if (prefs.getLastNotificationDate() != todayString) {
                 notificationHelper.sendRoastNotification(totalMs, filteredBreakdown, prefs.getLanguage())

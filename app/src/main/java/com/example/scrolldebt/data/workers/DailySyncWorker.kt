@@ -1,14 +1,13 @@
 package com.example.scrolldebt.data.workers
 
 import android.content.Context
+import com.example.scrolldebt.utils.DateKeys
 import com.example.scrolldebt.utils.UsageStatsHelper
 import com.example.scrolldebt.data.repository.PreferencesManager
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.scrolldebt.data.db.ScrollDebtDatabase
 import com.example.scrolldebt.data.models.UsageRecord
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 import androidx.hilt.work.HiltWorker
@@ -39,12 +38,8 @@ class DailySyncWorker @AssistedInject constructor(
         val jsonMap = filteredBreakdown.associate { it.packageName to JsonPrimitive(it.timeSpentMs) }
         val jsonBreakdown = Json.encodeToString(JsonObject.serializer(), JsonObject(jsonMap))
 
-        // Current date in format YYYY-MM-DD
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val dateString = sdf.format(Date())
-
         val record = UsageRecord(
-            dateString,
+            DateKeys.today(),
             totalMs,
             jsonBreakdown
         )

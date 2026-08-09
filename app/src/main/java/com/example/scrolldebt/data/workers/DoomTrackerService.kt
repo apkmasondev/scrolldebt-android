@@ -14,9 +14,9 @@ import com.example.scrolldebt.MainActivity
 import com.example.scrolldebt.data.repository.PreferencesManager
 import com.example.scrolldebt.domain.usecases.BrutalTruthEngine
 import com.example.scrolldebt.utils.AppUsageInfo
+import com.example.scrolldebt.utils.DateKeys
 import com.example.scrolldebt.utils.UsageStatsHelper
 import kotlinx.coroutines.*
-import java.text.SimpleDateFormat
 import java.util.*
 
 import dagger.hilt.android.AndroidEntryPoint
@@ -135,8 +135,7 @@ class DoomTrackerService : Service() {
         val thresholdMs = prefs.getNotificationThresholdMinutes() * 60 * 1000L
 
         if (totalMs > thresholdMs) {
-            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val todayString = sdf.format(Date())
+            val todayString = DateKeys.today()
             
             if (prefs.getLastNotificationDate() != todayString) {
                 notificationHelper.sendRoastNotification(totalMs, filteredBreakdown, prefs.getLanguage())
