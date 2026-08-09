@@ -71,4 +71,6 @@
     <string name="time_d">d</string>
     <string name="time_h">h</string>
     <string name="time_m">m</string>
+    <string name="share_chooser_title">Udostępnij swój wstyd</string>
+    <string name="share_failed">Nie udało się utworzyć grafiki</string>
 </resources>

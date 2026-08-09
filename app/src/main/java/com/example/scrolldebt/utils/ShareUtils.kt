@@ -10,6 +10,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.net.Uri
+import android.widget.Toast
 import androidx.core.content.FileProvider
 import java.io.File
 import java.io.FileOutputStream
@@ -18,30 +19,43 @@ object ShareUtils {
 
     fun shareWeeklyRoast(context: Context, weeklyTimeMs: Long, roastText: String, titleText: String, wastedText: String, language: String) {
         val bitmap = generateRoastBitmap(context, weeklyTimeMs, roastText, titleText, wastedText, language)
-        val imageUri = saveBitmapToCacheAndGetUri(context, bitmap)
-        
-        if (imageUri != null) {
-            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                type = "image/png"
-                putExtra(Intent.EXTRA_STREAM, imageUri)
-                val shareText = context.getString(R.string.share_intent_text)
-                putExtra(Intent.EXTRA_TEXT, shareText)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            context.startActivity(Intent.createChooser(shareIntent, "Share Summary"))
+        val imageUri = try {
+            saveBitmapToCacheAndGetUri(context, bitmap)
+        } finally {
+            // A 1080x1920 ARGB_8888 buffer is ~8 MB. It is encoded to PNG by this point, so
+            // hand it back immediately instead of waiting for the collector.
+            bitmap.recycle()
+        }
+
+        if (imageUri == null) {
+            Toast.makeText(context, R.string.share_failed, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "image/png"
+            putExtra(Intent.EXTRA_STREAM, imageUri)
+            putExtra(Intent.EXTRA_TEXT, context.getString(R.string.share_intent_text))
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        val chooser = Intent.createChooser(shareIntent, context.getString(R.string.share_chooser_title))
+        try {
+            context.startActivity(chooser)
+        } catch (e: android.content.ActivityNotFoundException) {
+            // No app on the device can receive an image/png send.
+            Toast.makeText(context, R.string.share_failed, Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun generateRoastBitmap(context: android.content.Context, weeklyTimeMs: Long, roastText: String, titleText: String, wastedText: String, language: String): Bitmap {
-        val logicalWidth = 1080
-        val logicalHeight = 1920
-        val scale = 0.5f // Reduce memory footprint by 75%
-        val bitmap = Bitmap.createBitmap((logicalWidth * scale).toInt(), (logicalHeight * scale).toInt(), Bitmap.Config.ARGB_8888)
+        // Full 1080x1920, the native size of an Instagram/TikTok story. This used to render
+        // at 0.5 scale to save memory, which shipped a 540x960 image that visibly softened
+        // once the story viewer upscaled it. The buffer is recycled by the caller instead.
+        val width = 1080
+        val height = 1920
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
-        canvas.scale(scale, scale)
-        
-        val width = logicalWidth
-        val height = logicalHeight
 
         canvas.drawColor(Color.parseColor("#0A0A0A")) // PureBlack
 
@@ -147,7 +161,8 @@ object ShareUtils {
         paint.color = Color.parseColor("#555555")
         paint.textSize = 35f
         paint.typeface = Typeface.create(Typeface.MONOSPACE, Typeface.NORMAL)
-        canvas.drawText("Play Store: ScrollDebt", width / 2f, height - 150f, paint)
+        // Where the app actually lives. It is not on Play, and the old footer said it was.
+        canvas.drawText("apkmasondev.github.io/scrolldebt-site", width / 2f, height - 150f, paint)
 
         return bitmap
     }
@@ -177,14 +192,23 @@ object ShareUtils {
         return try {
             val cachePath = File(context.cacheDir, "shared_images")
             cachePath.mkdirs()
-            val file = File(cachePath, "roast_summary.png")
-            val stream = FileOutputStream(file)
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-            stream.close()
 
+            // Always the same filename, so repeated shares overwrite rather than accumulate;
+            // the directory can never hold more than this one image.
+            val file = File(cachePath, "roast_summary.png")
+
+            // use{} rather than a bare close(): if compress() throws, the previous version
+            // leaked the file descriptor.
+            FileOutputStream(file).use { stream ->
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            }
+
+            // Must match the authority declared for FileProvider in AndroidManifest, which is
+            // ${applicationId}.fileprovider. applicationId differs from the package name of
+            // the R class here, so derive it from the context rather than hardcoding.
             FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
         } catch (e: Exception) {
-            e.printStackTrace()
+            android.util.Log.e("ShareUtils", "Failed to write share image", e)
             null
         }
     }

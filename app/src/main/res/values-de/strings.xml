@@ -71,4 +71,6 @@
     <string name="time_d">t</string>
     <string name="time_h">h</string>
     <string name="time_m">m</string>
+    <string name="share_chooser_title">Teile deine Schande</string>
+    <string name="share_failed">Bild konnte nicht erstellt werden</string>
 </resources>
